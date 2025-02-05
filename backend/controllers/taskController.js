@@ -15,7 +15,10 @@ const submitTask = async (req, res, next) => {
     const taskId = new mongoose.Types.ObjectId().toString();
     const newTask = new Task({ taskId, imageUrl, status: "Pending" });
     await newTask.save();
+
+    // Add task to the queue
     await taskQueue.add("processTask", { taskId });
+    console.log(`Task ${taskId} added to the queue`);
 
     res.json({ taskId, status: "Pending" });
   } catch (error) {
@@ -31,4 +34,5 @@ const getAllTasks = async (req, res, next) => {
     next(error);
   }
 };
+
 module.exports = { submitTask, getAllTasks };
