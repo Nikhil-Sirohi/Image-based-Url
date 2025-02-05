@@ -1,10 +1,11 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const { Worker } = require("bullmq");
-const redis = require("ioredis");
 const axios = require("axios");
+const Task = require("../models/Task");
+const connectRedis = require("../config/redis");
 
-// MongoDB Connection
+// Connect to MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -13,20 +14,19 @@ mongoose
   .then(() => console.log("Worker: MongoDB Connected"))
   .catch((err) => console.error(err));
 
-// Redis Connection
-const redisClient = new redis(process.env.REDIS_URL);
+const redisClient = connectRedis();
+
 const taskWorker = new Worker(
   "taskQueue",
   async (job) => {
     const { taskId } = job.data;
-    const task = await mongoose.model("Task").findOne({ taskId });
-
+    const task = await Task.findOne({ taskId });
     if (!task) return;
 
     task.status = "Processing";
     await task.save();
 
-    await new Promise((resolve) => setTimeout(resolve, 60000)); // Simulate 1-minute processing
+    await new Promise((resolve) => setTimeout(resolve, 60000)); // Simulate processing
 
     try {
       await axios.get(task.imageUrl);
