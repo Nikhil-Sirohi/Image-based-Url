@@ -23,4 +23,12 @@ const submitTask = async (req, res, next) => {
   }
 };
 
-module.exports = { submitTask };
+const getAllTasks = async (req, res, next) => {
+  try {
+    const tasks = await Task.find().sort({ timestamp: -1 });
+    res.json(tasks);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports = { submitTask, getAllTasks };
